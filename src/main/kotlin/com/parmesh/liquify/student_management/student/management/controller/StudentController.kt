@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @CrossOrigin
@@ -22,8 +23,9 @@ class StudentController(private val studentService: StudentService) {
     // Getting details of students using /get routing and GET method
     //    var l = mutableListOf<List>()
     @GetMapping("/list/all")
-    fun getAllStudentData(): List<Student> {
-        return studentService.getAll()
+    fun getAllStudentData(@RequestParam(defaultValue = "0") page: Int,
+                          @RequestParam(defaultValue = "2") size: Int): List<Student> {
+        return studentService.getAll(page, size).content
     }
 
 //    getting student by id
@@ -48,5 +50,11 @@ class StudentController(private val studentService: StudentService) {
     @PutMapping("/update")
     fun updateStudent(@RequestBody student: Student): Student  {
         return studentService.update(student)
+    }
+
+//    search by name
+    @GetMapping("/get/search")
+    fun searchByName(@RequestParam("s", defaultValue = "") s: String): List<Student> {
+        return studentService.searchRecords(s)
     }
 }

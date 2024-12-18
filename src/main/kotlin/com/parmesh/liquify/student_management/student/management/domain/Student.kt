@@ -7,8 +7,8 @@ import java.util.*
 @Document(collection = "student-info")
 data class Student (
 
-    @Id val id: String = UUID.randomUUID().toString(),
-    val name: String,
-    val age: Int,
-    val assignClass: String
+    @Id var id: String = UUID.randomUUID().toString(),
+    var name: String,
+    var age: Int,
+    var assignClass: String
 )
