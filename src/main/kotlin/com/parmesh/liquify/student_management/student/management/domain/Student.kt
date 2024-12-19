@@ -10,5 +10,7 @@ data class Student (
     @Id var id: String = UUID.randomUUID().toString(),
     var name: String,
     var age: Int,
-    var assignClass: String
+    var assignClass: String,
+    var gender: String,
+    var email: String,
 )

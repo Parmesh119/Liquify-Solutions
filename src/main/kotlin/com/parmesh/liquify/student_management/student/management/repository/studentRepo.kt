@@ -1,6 +1,12 @@
 package com.parmesh.liquify.student_management.student.management.repository
 
 import com.parmesh.liquify.student_management.student.management.domain.Student
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.data.mongodb.MongoDatabaseFactory
+import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter
+import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.data.mongodb.repository.Query
 
@@ -13,6 +19,19 @@ interface studentRepo: MongoRepository<Student, String> {
 }
 
 interface UserRepository : PagingAndSortingRepository<Student, Long>
+
+@Configuration
+class MongoConfig {
+    @Bean
+    fun mongoTemplate(mongoDbFactory: MongoDatabaseFactory, mongoConverter: MappingMongoConverter): MongoTemplate {
+        return MongoTemplate(mongoDbFactory, mongoConverter)
+    }
+
+    @Bean
+    fun gridFsTemplate(mongoDbFactory: MongoDatabaseFactory, mongoConverter: MappingMongoConverter): GridFsTemplate {
+        return GridFsTemplate(mongoDbFactory, mongoConverter)
+    }
+}
 
 //
 //package com.parmesh.liquify.student_management.student.management.repository
