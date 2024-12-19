@@ -1,5 +1,6 @@
 package com.parmesh.liquify.student_management.student.management.service
 
+import API
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfWriter
 import com.mongodb.BasicDBObject
@@ -28,13 +29,17 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.messaging.Task
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpMethod
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.exchange
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 @Service
-class StudentService(private val studentRepo: studentRepo, private val gridFsTemplate: GridFsTemplate, @Autowired private val mongoTemplate: MongoTemplate, @Autowired private val emailSender: JavaMailSender) {
+class StudentService(@Autowired private val restTempplate: RestTemplate, private val studentRepo: studentRepo, private val gridFsTemplate: GridFsTemplate, @Autowired private val mongoTemplate: MongoTemplate, @Autowired private val emailSender: JavaMailSender) {
 
 //    list of all students
     fun listStudent(): List<Student> {
@@ -251,6 +256,16 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
         }
 
         return mongoTemplate.find(query, Student::class.java)
+    }
+
+//    fetching the data from external API
+    private final val api_key = "5326e37d1d25994a5a5e669d808fcb86"
+    private val api_url  = "https://api.openweathermap.org/data/2.5/forecast?lat=35&lon=139&appid=${api_key}"
+
+    fun getWeather(lat: Double, lon: Double): API {
+        val finalApi = api_url.replace("{lat}", lat.toString()).replace("{lon}", lon.toString())
+        val responseEntity: ResponseEntity<API> = restTempplate.exchange(finalApi, HttpMethod.GET, null, API::class.java)
+        return responseEntity.body ?: throw Exception("API response body is null")
     }
 
 }

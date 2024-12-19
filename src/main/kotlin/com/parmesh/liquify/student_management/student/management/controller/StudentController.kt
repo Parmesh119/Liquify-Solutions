@@ -1,5 +1,6 @@
 package com.parmesh.liquify.student_management.student.management.controller
 
+import API
 import com.parmesh.liquify.student_management.student.management.domain.Student
 import com.parmesh.liquify.student_management.student.management.service.StudentService
 import jakarta.validation.Valid
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import java.util.*
 
 @CrossOrigin
 @RestController
@@ -146,5 +148,15 @@ class StudentController(private val studentService: StudentService) {
         @RequestParam(required = false) assignClass: String?
     ): List<Student> {
         return studentService.getFilteredTasks(name, age, assignClass)
+    }
+
+    @GetMapping("get/weather")
+    fun weather(
+        @RequestParam("lat") lat: Double,
+        @RequestParam("lon") lon: Double
+    ): API {
+
+        // Call the getWeather function and return the result
+        return studentService.getWeather(lat, lon)
     }
 }
