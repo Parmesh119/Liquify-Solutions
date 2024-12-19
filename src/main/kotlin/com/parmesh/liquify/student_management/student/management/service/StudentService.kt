@@ -23,52 +23,64 @@ import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.Paragraph
 import com.opencsv.CSVReader
 import jakarta.mail.internet.MimeMessage
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Pageable
+import org.springframework.data.mongodb.core.messaging.Task
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 @Service
-class StudentService(private val studentRepo: studentRepo, private val gridFsTemplate: GridFsTemplate, private val mongoTemplate: MongoTemplate, @Autowired private val emailSender: JavaMailSender) {
+class StudentService(private val studentRepo: studentRepo, private val gridFsTemplate: GridFsTemplate, @Autowired private val mongoTemplate: MongoTemplate, @Autowired private val emailSender: JavaMailSender) {
+
+//    list of all students
     fun listStudent(): List<Student> {
         return studentRepo.findAll()
     }
 
+//    list of all students with pagination
     fun getAll(page: Int, size: Int): Page<Student> {
         val pageable = PageRequest.of(page, size)
         return studentRepo.findAll(pageable)
     }
 
+//    get student by id
     fun getStudentById(id: String): Student {
         return studentRepo.findById(id).orElseThrow { IllegalStateException("Not found") }
     }
 
-
+//    add new student
     fun addStudentData(student: Student): Student {
         return studentRepo.save(student)
     }
 
+//    delete student by id
     fun deleteById(id: String) {
         if(studentRepo.existsById(id)) {
             studentRepo.deleteById(id)
         }
     }
 
+//    delete all students
     fun deleteAll() {
         studentRepo.deleteAll()
     }
 
-    fun update(student: Student): Student {
-        val existingStudent = studentRepo.findById(student.id)
+//    update student
+    fun update(student: Student, id: String): Student {
+        val existingStudent = studentRepo.findById(id)
         if(existingStudent.isPresent) {
             val newStudent = studentRepo.save(student)
             return newStudent
         } else {
-            throw IllegalStateException("No student found with id: ${student.id}")
+            throw IllegalStateException("No student found with id: ${id}")
         }
     }
 
+//    searching the records using @Query annotation method but still the using MongoTemplate is pending
     fun searchRecords(s: String): List<Student> {
         try {
             return studentRepo.search(".*$s.*")
@@ -78,7 +90,6 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
     }
 
 //  uploading the file and checking the header is valid or not
-
     fun uploadFile(file: MultipartFile): String {
         val metadata = BasicDBObject()
         metadata["contentType"] = file.contentType
@@ -92,7 +103,7 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
         return fileId.toHexString()
     }
 
-    //    header checking for csv file
+    //    header checking for csv file only
     fun uploadAndSaveCSV(file: InputStream): String {
         val requiredColumns = listOf("name", "age", "assignClass", "gender", "email")
         val reader = CSVReader(InputStreamReader(file))
@@ -126,9 +137,6 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
         studentRepo.saveAll(students)
         return "success"
     }
-
-
-
 
 //    fun uploadFile(file: MultipartFile): String {
 //        // Define the expected header
@@ -165,7 +173,7 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
 
 
 
-
+//    download the file
     fun downloadRecordPdf(Id: String): kotlin.Pair<String, InputStream> {
         val file = gridFsTemplate.findOne(Query.query(Criteria.where("_id").`is`(ObjectId(Id))))
             ?: throw IllegalStateException("File not found")
@@ -176,10 +184,12 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
         return Pair(filename, inputStream)  // Correct way to create a Pair in Kotlin
     }
 
+//    get student by id and generate pdf
     fun getStudentPdfId(id: String): Student? {
         return studentRepo.findById(id).orElseThrow { IllegalStateException("Not found") }
     }
 
+//    generate pdf for student
     fun generateStudentPdf(user: Student): ByteArray {
         val byteArrayOutputStream = ByteArrayOutputStream()
 
@@ -212,6 +222,7 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
         return student.email
     }
 
+//    sending email
     fun sendEmail(to: String, subject: String, body: String) {
         val message: MimeMessage = emailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true)
@@ -219,6 +230,27 @@ class StudentService(private val studentRepo: studentRepo, private val gridFsTem
         helper.setSubject(subject)
         helper.setText(body, true) // Set to true for HTML content
         emailSender.send(message)
+    }
+
+//    searching based on name and including pagination
+    fun searchandPagination(name: String, pageable: Pageable): Page<Student> {
+        return studentRepo.findByNameContainingIgnoreCase(name, pageable)
+    }
+
+//    filtering using Mongotemplate
+    fun getFilteredTasks(name: String?, age: Int?, assignClass: String?): List<Student> {
+        val query = Query()
+
+        if (name != null || age != null || assignClass != null) {
+            name?.let { query.addCriteria(Criteria.where("name").regex(it, "i")) }
+            age?.let { query.addCriteria(Criteria.where("age").`is`(it)) }
+            assignClass?.let { query.addCriteria(Criteria.where("assignClass").`is`(it)) }
+        } else {
+            // If no filter parameters are provided, return all tasks
+            return mongoTemplate.findAll(Student::class.java)
+        }
+
+        return mongoTemplate.find(query, Student::class.java)
     }
 
 }

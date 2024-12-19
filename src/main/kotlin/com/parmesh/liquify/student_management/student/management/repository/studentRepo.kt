@@ -3,6 +3,8 @@ package com.parmesh.liquify.student_management.student.management.repository
 import com.parmesh.liquify.student_management.student.management.domain.Student
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.MongoDatabaseFactory
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter
@@ -11,11 +13,14 @@ import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.data.mongodb.repository.Query
 
 import org.springframework.data.repository.PagingAndSortingRepository
+import org.springframework.stereotype.Repository
 
+@Repository
 interface studentRepo: MongoRepository<Student, String> {
     // Case-insensitive search using regex without using $options
     @Query("{'name': {\$regex: '^?0$', \$options: 'i'}}")
     fun search(s: String): List<Student>
+    fun findByNameContainingIgnoreCase(name: String, pageable: Pageable): Page<Student>
 }
 
 interface UserRepository : PagingAndSortingRepository<Student, Long>

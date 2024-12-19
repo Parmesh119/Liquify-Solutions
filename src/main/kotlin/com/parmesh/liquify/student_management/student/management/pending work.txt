@@ -1,0 +1,6 @@
+the searching is pending for the request coming from frontend and data is in request body
+same for searching based pagination
+filtering is pending
+data validation is pending
+data that is in csv file that need to check and validate pending
+duplication checking is pending

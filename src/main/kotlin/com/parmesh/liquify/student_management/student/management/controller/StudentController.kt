@@ -2,6 +2,12 @@ package com.parmesh.liquify.student_management.student.management.controller
 
 import com.parmesh.liquify.student_management.student.management.domain.Student
 import com.parmesh.liquify.student_management.student.management.service.StudentService
+import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.mongodb.core.messaging.Task
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -62,9 +68,9 @@ class StudentController(private val studentService: StudentService) {
 
 
 //    Update student data
-    @PutMapping("/update")
-    fun updateStudent(@RequestBody student: Student): Student  {
-        return studentService.update(student)
+    @PutMapping("/update/{id}")
+    fun updateStudent(@RequestBody student: Student, @RequestParam id: String): Student  {
+        return studentService.update(student, id)
     }
 
 //    search by name
@@ -114,4 +120,31 @@ class StudentController(private val studentService: StudentService) {
         return studentService.sendEmail(email, "Student Information", "This is the student information")
     }
 
+//    searching based on name and including pagination and sorting and assending and descending order
+    @GetMapping("/get/search/pagination")
+    fun searchStudents(
+        @RequestParam name: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "name") sortBy: String,
+        @RequestParam(defaultValue = "ASC") sortDirection: String
+    ): Page<Student> {
+        val sort = if (sortDirection.equals("DESC", ignoreCase = true)) {
+            Sort.by(sortBy).descending()
+        } else {
+            Sort.by(sortBy).ascending()
+        }
+        val pageable: Pageable = PageRequest.of(page, size, sort)
+        return studentService.searchandPagination(name, pageable)
+    }
+
+//    filtering based using MontoTempalte
+    @GetMapping("/get/filtered")
+    fun getFilteredTasks(
+        @RequestParam(required = false) name: String?,
+        @RequestParam(required = false) age: Int?,
+        @RequestParam(required = false) assignClass: String?
+    ): List<Student> {
+        return studentService.getFilteredTasks(name, age, assignClass)
+    }
 }
