@@ -1,12 +1,11 @@
 package com.parmesh.liquify.student_management.student.management.service
 
-import API
+import WeatherApiResponse
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfWriter
 import com.mongodb.BasicDBObject
 import com.parmesh.liquify.student_management.student.management.domain.Student
 import com.parmesh.liquify.student_management.student.management.repository.studentRepo
-import org.apache.catalina.User
 import org.bson.types.ObjectId
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -17,25 +16,21 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.data.mongodb.gridfs.GridFsTemplate
-import org.springframework.data.util.Pair
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.Paragraph
 import com.opencsv.CSVReader
 import jakarta.mail.internet.MimeMessage
-import jakarta.validation.Valid
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Pageable
-import org.springframework.data.mongodb.core.messaging.Task
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
-import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.security.web.csrf.CsrfToken
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.exchange
-import java.io.BufferedReader
 import java.io.InputStreamReader
 
 @Service
@@ -259,13 +254,22 @@ class StudentService(@Autowired private val restTempplate: RestTemplate, private
     }
 
 //    fetching the data from external API
-    private final val api_key = "5326e37d1d25994a5a5e669d808fcb86"
+    private val api_key = "5326e37d1d25994a5a5e669d808fcb86"
     private val api_url  = "https://api.openweathermap.org/data/2.5/forecast?lat=35&lon=139&appid=${api_key}"
 
-    fun getWeather(lat: Double, lon: Double): API {
+    fun getWeather(lat: Double, lon: Double): WeatherApiResponse {
         val finalApi = api_url.replace("{lat}", lat.toString()).replace("{lon}", lon.toString())
-        val responseEntity: ResponseEntity<API> = restTempplate.exchange(finalApi, HttpMethod.GET, null, API::class.java)
+        val responseEntity: ResponseEntity<WeatherApiResponse> = restTempplate.exchange(finalApi, HttpMethod.GET, null, WeatherApiResponse::class.java)
         return responseEntity.body ?: throw Exception("API response body is null")
     }
+
+// creating the login and registration
+    fun register(student: Student): Student {
+        TODO()
+    }
+    fun login(student: Student): Student {
+        TODO()
+    }
+
 
 }

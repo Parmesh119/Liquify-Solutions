@@ -1,17 +1,17 @@
 package com.parmesh.liquify.student_management.student.management.controller
 
-import API
+import WeatherApiResponse
 import com.parmesh.liquify.student_management.student.management.domain.Student
 import com.parmesh.liquify.student_management.student.management.service.StudentService
-import jakarta.validation.Valid
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
-import org.springframework.data.mongodb.core.messaging.Task
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.web.csrf.CsrfToken
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -24,13 +24,17 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import java.util.*
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/student")
 @Service
 class StudentController(private val studentService: StudentService) {
+
+    @GetMapping("/hello")
+    fun hello(): String {
+        return "welcome"
+    }
 
     //    Getting details of students using /get routing and GET method and without pagination
     @GetMapping("/list/all")
@@ -154,9 +158,25 @@ class StudentController(private val studentService: StudentService) {
     fun weather(
         @RequestParam("lat") lat: Double,
         @RequestParam("lon") lon: Double
-    ): API {
+    ): WeatherApiResponse {
 
         // Call the getWeather function and return the result
         return studentService.getWeather(lat, lon)
+    }
+
+//    creating the login and registration
+    @PostMapping("/register")
+    fun register(@RequestBody student: Student): Student {
+        return studentService.register(student)
+    }
+
+    @PostMapping("/login")
+    fun login(@RequestBody student: Student): Student {
+        return studentService.login(student)
+    }
+
+    @GetMapping("/get/csrf")
+    fun getCSRF(request: HttpServletRequest): CsrfToken {
+        return request.getAttribute("_csrf") as CsrfToken
     }
 }
